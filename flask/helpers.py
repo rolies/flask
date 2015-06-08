@@ -5,7 +5,7 @@
 
     Implements various helpers.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -427,12 +427,8 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
     guessing requires a `filename` or an `attachment_filename` to be
     provided.
 
-    Please never pass filenames to this function from user sources without
-    checking them first.  Something like this is usually sufficient to
-    avoid security problems::
-
-        if '..' in filename or filename.startswith('/'):
-            abort(404)
+    Please never pass filenames to this function from user sources;
+    you should use :func:`send_from_directory` instead.
 
     .. versionadded:: 0.2
 
@@ -449,14 +445,14 @@ def send_file(filename_or_fp, mimetype=None, as_attachment=False,
     .. versionchanged:: 0.9
        cache_timeout pulls its default from application config, when None.
 
-    :param filename_or_fp: the filename of the file to send.  This is
-                           relative to the :attr:`~Flask.root_path` if a
-                           relative path is specified.
-                           Alternatively a file object might be provided
-                           in which case ``X-Sendfile`` might not work and
-                           fall back to the traditional method.  Make sure
-                           that the file pointer is positioned at the start
-                           of data to send before calling :func:`send_file`.
+    :param filename_or_fp: the filename of the file to send in `latin-1`.
+                           This is relative to the :attr:`~Flask.root_path`
+                           if a relative path is specified.
+                           Alternatively a file object might be provided in
+                           which case ``X-Sendfile`` might not work and fall
+                           back to the traditional method.  Make sure that the
+                           file pointer is positioned at the start of data to
+                           send before calling :func:`send_file`.
     :param mimetype: the mimetype of the file if provided, otherwise
                      auto detection happens.
     :param as_attachment: set to ``True`` if you want to send this file with
@@ -806,11 +802,10 @@ class _PackageBoundObject(object):
     del _get_static_folder, _set_static_folder
 
     def _get_static_url_path(self):
-        if self._static_url_path is None:
-            if self.static_folder is None:
-                return None
+        if self._static_url_path is not None:
+            return self._static_url_path
+        if self.static_folder is not None:
             return '/' + os.path.basename(self.static_folder)
-        return self._static_url_path
     def _set_static_url_path(self, value):
         self._static_url_path = value
     static_url_path = property(_get_static_url_path, _set_static_url_path)
@@ -819,7 +814,7 @@ class _PackageBoundObject(object):
     @property
     def has_static_folder(self):
         """This is ``True`` if the package bound object's container has a
-        folder named ``'static'``.
+        folder for static files.
 
         .. versionadded:: 0.5
         """

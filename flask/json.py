@@ -5,12 +5,12 @@
 
     Implementation helpers for the JSON support in Flask.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 import io
 import uuid
-from datetime import datetime
+from datetime import date
 from .globals import current_app, request
 from ._compat import text_type, PY2
 
@@ -74,8 +74,8 @@ class JSONEncoder(_json.JSONEncoder):
                     return list(iterable)
                 return JSONEncoder.default(self, o)
         """
-        if isinstance(o, datetime):
-            return http_date(o)
+        if isinstance(o, date):
+            return http_date(o.timetuple())
         if isinstance(o, uuid.UUID):
             return str(o)
         if hasattr(o, '__html__'):
@@ -85,7 +85,7 @@ class JSONEncoder(_json.JSONEncoder):
 
 class JSONDecoder(_json.JSONDecoder):
     """The default JSON decoder.  This one does not change the behavior from
-    the default simplejson encoder.  Consult the :mod:`json` documentation
+    the default simplejson decoder.  Consult the :mod:`json` documentation
     for more information.  This decoder is not only used for the load
     functions of this module but also :attr:`~flask.Request`.
     """
@@ -200,8 +200,9 @@ def htmlsafe_dump(obj, fp, **kwargs):
 
 def jsonify(*args, **kwargs):
     """Creates a :class:`~flask.Response` with the JSON representation of
-    the given arguments with an :mimetype:`application/json` mimetype.  The arguments
-    to this function are the same as to the :class:`dict` constructor.
+    the given arguments with an :mimetype:`application/json` mimetype.  The
+    arguments to this function are the same as to the :class:`dict`
+    constructor.
 
     Example usage::
 
@@ -241,9 +242,13 @@ def jsonify(*args, **kwargs):
         indent = 2
         separators = (', ', ': ')
 
-    return current_app.response_class(dumps(dict(*args, **kwargs),
-        indent=indent, separators=separators),
+    # Note that we add '\n' to end of response
+    # (see https://github.com/mitsuhiko/flask/pull/1262)
+    rv = current_app.response_class(
+        (dumps(dict(*args, **kwargs), indent=indent, separators=separators),
+         '\n'),
         mimetype='application/json')
+    return rv
 
 
 def tojson_filter(obj, **kwargs):

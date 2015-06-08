@@ -18,25 +18,7 @@ A minimal Flask application looks something like this::
 
     @app.route('/')
     def hello_world():
-        return 'Hello World!'
-
-Just save it as :file:`hello.py` (or something similar) and run it with your Python
-interpreter.  Make sure to not call your application :file:`flask.py` because this
-would conflict with Flask itself.
-
-To run the application you can either use the :command:`flask` command or
-python's :option:`-m` switch with Flask::
-
-    $ flask -a hello run
-     * Running on http://127.0.0.1:5000/
-
-or alternatively::
-
-    $ python -m flask -a hello run
-     * Running on http://127.0.0.1:5000/
-
-Now head over to `http://127.0.0.1:5000/ <http://127.0.0.1:5000/>`_, and you
-should see your hello world greeting.
+        return 'Hello, World!'
 
 So what did that code do?
 
@@ -54,10 +36,28 @@ So what did that code do?
 4. The function is given a name which is also used to generate URLs for that
    particular function, and returns the message we want to display in the
    user's browser.
-5. Finally we use the Flask development server to run the local server
-   with our application.
 
-To stop the server, hit control-C.
+Just save it as :file:`hello.py` (or something similar) and run it with your Python
+interpreter.  Make sure to not call your application :file:`flask.py` because this
+would conflict with Flask itself.
+
+To run the application you can either use the :command:`flask` command or
+python's :option:`-m` switch with Flask::
+
+    $ flask -a hello run
+     * Running on http://127.0.0.1:5000/
+
+or alternatively::
+
+    $ python -m flask -a hello run
+     * Running on http://127.0.0.1:5000/
+
+This launches a very simple builtin server, which is good enough for testing
+but probably not what you want to use in production. For deployment options see
+:ref:`deployment`.
+
+Now head over to `http://127.0.0.1:5000/ <http://127.0.0.1:5000/>`_, and you
+should see your hello world greeting.
 
 .. _public-server:
 
@@ -75,6 +75,7 @@ To stop the server, hit control-C.
        flask -a hello run --host=0.0.0.0
 
    This tells your operating system to listen on all public IPs.
+
 
 What to do if the Server does not Start
 ---------------------------------------
@@ -116,6 +117,8 @@ The most common reason is a typo or because you did not actually create an
 
 Debug Mode
 ----------
+
+(Want to just log errors and stack traces? See :ref:`application-errors`)
 
 The :command:`flask` script is nice to start a local development server, but
 you would have to restart it manually after each change to your code.
@@ -171,7 +174,7 @@ bind a function to a URL.  Here are some basic examples::
 
     @app.route('/hello')
     def hello():
-        return 'Hello World'
+        return 'Hello, World'
 
 But there is more to it!  You can make certain parts of the URL dynamic and
 attach multiple rules to a function.
@@ -429,7 +432,7 @@ Here is an example template:
     {% if name %}
       <h1>Hello {{ name }}!</h1>
     {% else %}
-      <h1>Hello World!</h1>
+      <h1>Hello, World!</h1>
     {% endif %}
 
 Inside templates you also have access to the :class:`~flask.request`,
@@ -474,7 +477,7 @@ u'Marked up \xbb HTML'
 Accessing Request Data
 ----------------------
 
-For web applications it's crucial to react to the data a client sent to
+For web applications it's crucial to react to the data a client sends to
 the server.  In Flask this information is provided by the global
 :class:`~flask.request` object.  If you have some experience with Python
 you might be wondering how that object can be global and how Flask
@@ -611,7 +614,7 @@ pass it through the :func:`~werkzeug.utils.secure_filename` function that
 Werkzeug provides for you::
 
     from flask import request
-    from werkzeug import secure_filename
+    from werkzeug.utils import secure_filename
 
     @app.route('/upload', methods=['GET', 'POST'])
     def upload_file():
@@ -699,6 +702,8 @@ you want to customize the error page, you can use the
 Note the ``404`` after the :func:`~flask.render_template` call.  This
 tells Flask that the status code of that page should be 404 which means
 not found.  By default 200 is assumed which translates to: all went well.
+
+See :ref:`error-handlers` for more details.
 
 .. _about-responses:
 
@@ -859,6 +864,8 @@ The attached :attr:`~flask.Flask.logger` is a standard logging
 documentation <https://docs.python.org/library/logging.html>`_ for more
 information.
 
+Read more on :ref:`application-errors`.
+
 Hooking in WSGI Middlewares
 ---------------------------
 
@@ -870,24 +877,16 @@ can do it like this::
     from werkzeug.contrib.fixers import LighttpdCGIRootFix
     app.wsgi_app = LighttpdCGIRootFix(app.wsgi_app)
 
-.. _quickstart_deployment:
+Using Flask Extensions
+----------------------
+
+Extensions are packages that help you accomplish common tasks. For
+example, Flask-SQLAlchemy provides SQLAlchemy support that makes it simple
+and easy to use with Flask.
+
+For more on Flask extensions, have a look at :ref:`extensions`.
 
 Deploying to a Web Server
 -------------------------
 
-Ready to deploy your new Flask app?  To wrap up the quickstart, you can
-immediately deploy to a hosted platform, all of which offer a free plan for
-small projects:
-
-- `Deploying Flask on Heroku <https://devcenter.heroku.com/articles/getting-started-with-python>`_
-- `Deploying WSGI on dotCloud <http://docs.dotcloud.com/services/python/>`_
-  with `Flask-specific notes <http://flask.pocoo.org/snippets/48/>`_
-
-Other places where you can host your Flask app:
-
-- `Deploying Flask on Webfaction <http://flask.pocoo.org/snippets/65/>`_
-- `Deploying Flask on Google App Engine <https://github.com/kamalgill/flask-appengine-template>`_
-- `Sharing your Localhost Server with Localtunnel <http://flask.pocoo.org/snippets/89/>`_
-
-If you manage your own hosts and would like to host yourself, see the chapter
-on :ref:`deployment`.
+Ready to deploy your new Flask app? Go to :ref:`deployment`.

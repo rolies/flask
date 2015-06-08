@@ -5,7 +5,7 @@
 
     Implements the WSGI wrappers (request and response).
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -14,7 +14,6 @@ from werkzeug.exceptions import BadRequest
 
 from . import json
 from .globals import _request_ctx_stack
-
 
 _missing = object()
 
@@ -114,7 +113,7 @@ class Request(RequestBase):
         is considered to include JSON data if the mimetype is
         :mimetype:`application/json` or :mimetype:`application/*+json`.
 
-        .. versionadded:: 0.11
+        .. versionadded:: 1.0
         """
         mt = self.mimetype
         if mt == 'application/json':
@@ -175,6 +174,9 @@ class Request(RequestBase):
 
         .. versionadded:: 0.8
         """
+        ctx = _request_ctx_stack.top
+        if ctx is not None and ctx.app.config.get('DEBUG', False):
+            raise BadRequest('Failed to decode JSON object: {0}'.format(e))
         raise BadRequest()
 
     def _load_form_data(self):

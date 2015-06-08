@@ -6,7 +6,7 @@
     Blueprints are the recommended way to implement larger or more
     pluggable applications in Flask 0.7 and later.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 from functools import update_wrapper
@@ -408,7 +408,7 @@ class Blueprint(_PackageBoundObject):
         application-wide function of the :class:`~flask.Flask` object but
         for error handlers limited to this blueprint.
 
-        .. versionadded:: 0.11
+        .. versionadded:: 1.0
         """
         self.record_once(lambda s: s.app._register_error_handler(
             self.name, code_or_exception, f))

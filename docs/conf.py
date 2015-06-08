@@ -43,7 +43,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Flask'
-copyright = u'2014, Armin Ronacher'
+copyright = u'2015, Armin Ronacher'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -269,3 +269,24 @@ except ImportError, e:
     pygments_style = 'tango'
     html_theme = 'default'
     html_theme_options = {}
+
+
+# unwrap decorators
+def unwrap_decorators():
+    import sphinx.util.inspect as inspect
+    import functools
+
+    old_getargspec = inspect.getargspec
+    def getargspec(x):
+        return old_getargspec(getattr(x, '_original_function', x))
+    inspect.getargspec = getargspec
+
+    old_update_wrapper = functools.update_wrapper
+    def update_wrapper(wrapper, wrapped, *a, **kw):
+        rv = old_update_wrapper(wrapper, wrapped, *a, **kw)
+        rv._original_function = wrapped
+        return rv
+    functools.update_wrapper = update_wrapper
+
+unwrap_decorators()
+del unwrap_decorators

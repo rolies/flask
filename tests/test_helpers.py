@@ -5,16 +5,18 @@
 
     Various helpers.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
 import pytest
 
 import os
+import datetime
 import flask
 from logging import StreamHandler
 from werkzeug.http import parse_cache_control_header, parse_options_header
+from werkzeug.http import http_date
 from flask._compat import StringIO, text_type
 
 
@@ -28,6 +30,48 @@ def has_encoding(name):
 
 
 class TestJSON(object):
+
+    def test_jsonify_date_types(self):
+        """Test jsonify with datetime.date and datetime.datetime types."""
+
+        test_dates = (
+            datetime.datetime(1973, 3, 11, 6, 30, 45),
+            datetime.date(1975, 1, 5)
+        )
+
+        app = flask.Flask(__name__)
+        c = app.test_client()
+
+        for i, d in enumerate(test_dates):
+            url = '/datetest{0}'.format(i)
+            app.add_url_rule(url, str(i), lambda val=d: flask.jsonify(x=val))
+            rv = c.get(url)
+            assert rv.mimetype == 'application/json'
+            assert flask.json.loads(rv.data)['x'] == http_date(d.timetuple())
+
+    def test_post_empty_json_adds_exception_to_response_content_in_debug(self):
+        app = flask.Flask(__name__)
+        app.config['DEBUG'] = True
+        @app.route('/json', methods=['POST'])
+        def post_json():
+            flask.request.get_json()
+            return None
+        c = app.test_client()
+        rv = c.post('/json', data=None, content_type='application/json')
+        assert rv.status_code == 400
+        assert b'Failed to decode JSON object' in rv.data
+
+    def test_post_empty_json_wont_add_exception_to_response_if_no_debug(self):
+        app = flask.Flask(__name__)
+        app.config['DEBUG'] = False
+        @app.route('/json', methods=['POST'])
+        def post_json():
+            flask.request.get_json()
+            return None
+        c = app.test_client()
+        rv = c.post('/json', data=None, content_type='application/json')
+        assert rv.status_code == 400
+        assert b'Failed to decode JSON object' not in rv.data
 
     def test_json_bad_requests(self):
         app = flask.Flask(__name__)

@@ -5,12 +5,12 @@
 
     Implements the configuration related objects.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
-import imp
 import os
+import types
 import errno
 
 from werkzeug.utils import import_string
@@ -123,7 +123,7 @@ class Config(dict):
            `silent` parameter.
         """
         filename = os.path.join(self.root_path, filename)
-        d = imp.new_module('config')
+        d = types.ModuleType('config')
         d.__file__ = filename
         try:
             with open(filename) as config_file:

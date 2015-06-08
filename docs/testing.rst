@@ -58,7 +58,7 @@ client and initializes a new database.  This function is called before
 each individual test function is run.  To delete the database after the
 test, we close the file and remove it from the filesystem in the
 :meth:`~unittest.TestCase.tearDown` method.  Additionally during setup the
-``TESTING`` config flag is activated.  What it does is disabling the error
+``TESTING`` config flag is activated.  What it does is disable the error
 catching during request handling so that you get better error reports when
 performing test requests against the application.
 
@@ -107,7 +107,7 @@ test method to our class, like this::
 
         def test_empty_db(self):
             rv = self.app.get('/')
-            assert 'No entries here so far' in rv.data
+            assert b'No entries here so far' in rv.data
 
 Notice that our test functions begin with the word `test`; this allows
 :mod:`unittest` to automatically identify the method as a test to run.
@@ -207,6 +207,8 @@ temporarily.  With this you can access the :class:`~flask.request`,
 :class:`~flask.g` and :class:`~flask.session` objects like in view
 functions.  Here is a full example that demonstrates this approach::
 
+    import flask
+    
     app = flask.Flask(__name__)
 
     with app.test_request_context('/?name=Peter'):
@@ -276,7 +278,7 @@ having to change some code.  This can trivially be accomplished with
 hooking the :data:`flask.appcontext_pushed` signal::
 
     from contextlib import contextmanager
-    from flask import appcontext_pushed
+    from flask import appcontext_pushed, g
 
     @contextmanager
     def user_set(app, user):

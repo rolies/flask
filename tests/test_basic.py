@@ -5,7 +5,7 @@
 
     The basic functionality.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -107,14 +107,23 @@ def test_disallow_string_for_allowed_methods():
 def test_url_mapping():
     app = flask.Flask(__name__)
 
+    random_uuid4 = "7eb41166-9ebf-4d26-b771-ea3f54f8b383"
+
     def index():
         return flask.request.method
 
     def more():
         return flask.request.method
 
+    def options():
+        return random_uuid4
+
+
     app.add_url_rule('/', 'index', index)
     app.add_url_rule('/more', 'more', more, methods=['GET', 'POST'])
+
+    # Issue 1288: Test that automatic options are not added when non-uppercase 'options' in methods
+    app.add_url_rule('/options', 'options', options, methods=['options'])
 
     c = app.test_client()
     assert c.get('/').data == b'GET'
@@ -129,6 +138,9 @@ def test_url_mapping():
     rv = c.delete('/more')
     assert rv.status_code == 405
     assert sorted(rv.allow) == ['GET', 'HEAD', 'OPTIONS', 'POST']
+    rv = c.open('/options', method='OPTIONS')
+    assert rv.status_code == 200
+    assert random_uuid4 in rv.data.decode("utf-8")
 
 
 def test_werkzeug_routing():
@@ -563,6 +575,34 @@ def test_request_processing():
     assert rv == b'request|after'
 
 
+def test_request_preprocessing_early_return():
+    app = flask.Flask(__name__)
+    evts = []
+
+    @app.before_request
+    def before_request1():
+        evts.append(1)
+
+    @app.before_request
+    def before_request2():
+        evts.append(2)
+        return "hello"
+
+    @app.before_request
+    def before_request3():
+        evts.append(3)
+        return "bye"
+
+    @app.route('/')
+    def index():
+        evts.append('index')
+        return "damnit"
+
+    rv = app.test_client().get('/').data.strip()
+    assert rv == b'hello'
+    assert evts == [1, 2]
+
+
 def test_after_request_processing():
     app = flask.Flask(__name__)
     app.testing = True
@@ -942,7 +982,7 @@ def test_make_response_with_response_instance():
         rv = flask.make_response(
             flask.jsonify({'msg': 'W00t'}), 400)
         assert rv.status_code == 400
-        assert rv.data == b'{\n  "msg": "W00t"\n}'
+        assert rv.data == b'{\n  "msg": "W00t"\n}\n'
         assert rv.mimetype == 'application/json'
 
         rv = flask.make_response(
@@ -963,7 +1003,7 @@ def test_jsonify_no_prettyprint():
     app = flask.Flask(__name__)
     app.config.update({"JSONIFY_PRETTYPRINT_REGULAR": False})
     with app.test_request_context():
-        compressed_msg = b'{"msg":{"submsg":"W00t"},"msg2":"foobar"}'
+        compressed_msg = b'{"msg":{"submsg":"W00t"},"msg2":"foobar"}\n'
         uncompressed_msg = {
             "msg": {
                 "submsg": "W00t"
@@ -982,7 +1022,7 @@ def test_jsonify_prettyprint():
     with app.test_request_context():
         compressed_msg = {"msg":{"submsg":"W00t"},"msg2":"foobar"}
         pretty_response =\
-            b'{\n  "msg": {\n    "submsg": "W00t"\n  }, \n  "msg2": "foobar"\n}'
+            b'{\n  "msg": {\n    "submsg": "W00t"\n  }, \n  "msg2": "foobar"\n}\n'
 
         rv = flask.make_response(
             flask.jsonify(compressed_msg), 200)
@@ -1141,7 +1181,7 @@ def test_test_app_proper_environ():
 
 
 def test_exception_propagation():
-    def apprunner(configkey):
+    def apprunner(config_key):
         app = flask.Flask(__name__)
         app.config['LOGGER_HANDLER_POLICY'] = 'never'
 

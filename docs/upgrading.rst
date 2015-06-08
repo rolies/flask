@@ -29,6 +29,23 @@ applications.  Instead the new ``LOGGER_HANDLER_POLICY`` configuration can
 be used to disable the default log handlers and custom log handlers can be
 set up.
 
+The behavior of error handlers was changed.
+The precedence of handlers used to be based on the decoration/call order of
+:meth:`~flask.Flask.errorhandler` and
+:meth:`~flask.Flask.register_error_handler`, respectively.
+Now the inheritance hierarchy takes precedence and handlers for more
+specific exception classes are executed instead of more general ones.
+See :ref:`error-handlers` for specifics.
+
+.. note::
+
+    There used to be a logic error allowing you to register handlers
+    only for exception *instances*. This was unintended and plain wrong,
+    and therefore was replaced with the intended behavior of registering
+    handlers only using exception classes and HTTP error codes.
+    
+    Trying to register a handler on an instance now raises :exc:`ValueError`.
+
 .. _upgrading-to-010:
 
 Version 0.10
@@ -258,7 +275,7 @@ applications automatically, but there might be some cases where it fails
 to upgrade.  What changed?
 
 -   Blueprints need explicit names.  Modules had an automatic name
-    guesssing scheme where the shortname for the module was taken from the
+    guessing scheme where the shortname for the module was taken from the
     last part of the import module.  The upgrade script tries to guess
     that name but it might fail as this information could change at
     runtime.
@@ -296,7 +313,7 @@ Flask 0.6 comes with a backwards incompatible change which affects the
 order of after-request handlers.  Previously they were called in the order
 of the registration, now they are called in reverse order.  This change
 was made so that Flask behaves more like people expected it to work and
-how other systems handle request pre- and postprocessing.  If you
+how other systems handle request pre- and post-processing.  If you
 depend on the order of execution of post-request functions, be sure to
 change the order.
 

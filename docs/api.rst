@@ -92,25 +92,26 @@ Incoming Request Data
    .. attribute:: base_url
    .. attribute:: url_root
 
-      Provides different ways to look at the current URL.  Imagine your
-      application is listening on the following URL::
+      Provides different ways to look at the current `IRI
+      <http://tools.ietf.org/html/rfc3987>`_.  Imagine your application is
+      listening on the following application root::
 
           http://www.example.com/myapplication
 
-      And a user requests the following URL::
+      And a user requests the following URI::
 
-          http://www.example.com/myapplication/page.html?x=y
+          http://www.example.com/myapplication/%CF%80/page.html?x=y
 
       In this case the values of the above mentioned attributes would be
       the following:
 
       ============= ======================================================
-      `path`        ``/page.html``
-      `full_path`   ``/page.html?x=y``
-      `script_root` ``/myapplication``
-      `base_url`    ``http://www.example.com/myapplication/page.html``
-      `url`         ``http://www.example.com/myapplication/page.html?x=y``
-      `url_root`    ``http://www.example.com/myapplication/``
+      `path`        ``u'/π/page.html'``
+      `full_path`   ``u'/π/page.html?x=y'``
+      `script_root` ``u'/myapplication'``
+      `base_url`    ``u'http://www.example.com/myapplication/π/page.html'``
+      `url`         ``u'http://www.example.com/myapplication/π/page.html?x=y'``
+      `url_root`    ``u'http://www.example.com/myapplication/'``
       ============= ======================================================
 
    .. attribute:: is_xhr
@@ -350,7 +351,7 @@ JSON Support
 .. module:: flask.json
 
 Flask uses ``simplejson`` for the JSON implementation.  Since simplejson
-is provided both by the standard library as well as extension Flask will
+is provided by both the standard library as well as extension, Flask will
 try simplejson first and then fall back to the stdlib json module.  On top
 of that it will delegate access to the current application's JSON encoders
 and decoders for easier customization.
@@ -642,6 +643,8 @@ The following converters are available:
 `path`      like the default but also accepts slashes
 =========== ===============================================
 
+Custom converters can be defined using :attr:`flask.Flask.url_map`.
+
 Here are some examples::
 
     @app.route('/')
@@ -727,7 +730,7 @@ some defaults to :meth:`~flask.Flask.add_url_rule` or general behavior:
     cannot be customized from the function itself.
 
 -   `methods`: If methods are not provided when the URL rule is added,
-    Flask will look on the view function object itself is an `methods`
+    Flask will look on the view function object itself if a `methods`
     attribute exists.  If it does, it will pull the information for the
     methods from there.
 

@@ -5,7 +5,7 @@
 
     Tests the application context.
 
-    :copyright: (c) 2014 by Armin Ronacher.
+    :copyright: (c) 2015 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
 
@@ -75,6 +75,21 @@ def test_app_tearing_down_with_previous_exception():
 
     with app.app_context():
         pass
+
+    assert cleanup_stuff == [None]
+
+def test_app_tearing_down_with_handled_exception():
+    cleanup_stuff = []
+    app = flask.Flask(__name__)
+    @app.teardown_appcontext
+    def cleanup(exception):
+        cleanup_stuff.append(exception)
+
+    with app.app_context():
+        try:
+            raise Exception('dummy')
+        except Exception:
+            pass
 
     assert cleanup_stuff == [None]
 
